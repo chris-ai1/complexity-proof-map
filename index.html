@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Complexity Proof Map</title>
+<meta name="description" content="How the complexity of functions is proven in cslib-community/complexitylib, across machine models: predicates, bridges, tactics and recommended routes.">
+<style>
+:root{
+  --bg:#f7f7f5;--panel:#ffffff;--ink:#1d1f23;--muted:#5b616b;--line:#d9dbe0;
+  --plain:#2f6f4f;--tidy:#b3562b;--machine:#2c5d9e;--tactic:#7a4fa3;--cert:#8a6d1d;--class:#55606e;
+  --accent:#2c5d9e;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171a;--panel:#1d2024;--ink:#e6e7ea;--muted:#a3a8b1;--line:#30343a;
+    --plain:#6cc59a;--tidy:#ef9167;--machine:#7aa7e6;--tactic:#b892e0;--cert:#d8b955;--class:#9aa5b3;--accent:#7aa7e6;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171a;--panel:#1d2024;--ink:#e6e7ea;--muted:#a3a8b1;--line:#30343a;
+  --plain:#6cc59a;--tidy:#ef9167;--machine:#7aa7e6;--tactic:#b892e0;--cert:#d8b955;--class:#9aa5b3;--accent:#7aa7e6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:28px 16px 8px;max-width:1200px;margin:0 auto}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:19px;margin:28px 0 10px}
+p.lead{color:var(--muted);margin:0 0 6px;max-width:850px}
+main{max-width:1200px;margin:0 auto;padding:0 16px 48px}
+.wrap{display:grid;grid-template-columns:1fr 330px;gap:14px}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}}
+#cy{height:640px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+@media (max-width:860px){#cy{height:520px}}
+aside{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto;max-height:640px}
+aside h3{margin:0 0 6px;font-size:16px}
+aside .kind{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+aside code,td code,li code,p code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:color-mix(in srgb,var(--line) 45%,transparent);padding:1px 4px;border-radius:4px;word-break:break-word}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.controls button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}
+.controls button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin:6px 0 2px}
+.legend span::before{content:"";display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+table{border-collapse:collapse;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+.pill{display:inline-block;padding:0 7px;border-radius:999px;font-size:12px;border:1px solid currentColor}
+.plain{color:var(--plain)} .tidy{color:var(--tidy)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card .num{font-size:24px;font-weight:700}
+.card .lbl{color:var(--muted);font-size:13px}
+footer{color:var(--muted);font-size:13px;max-width:1200px;margin:0 auto;padding:0 16px 32px}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Complexity Proof Map</h1>
+  <p class="lead">How the time and space complexity of functions is proven in
+  <a href="https://github.com/cslib-community/complexitylib">cslib-community/complexitylib</a>:
+  the machine models, the complexity predicates stated about them, the bridges between predicates, the tactics that
+  automate them, and which route the library recommends. Snapshot of <code>main</code> on 2026-10-28.</p>
+</header>
+<main>
+  <div class="cards">
+    <div class="card"><div class="num">~6,950</div><div class="lbl">mentions of <code>ComputableInPolyTime</code> (plain), the canonical public target</div></div>
+    <div class="card"><div class="num">~946 / ~520</div><div class="lbl"><code>fun_prop</code> rules for plain / tidy predicates</div></div>
+    <div class="card"><div class="num">876</div><div class="lbl">public tidy statements left (785 inside Machines); being deleted in #862</div></div>
+    <div class="card"><div class="num">~2,500 / ~2,000</div><div class="lbl"><code>.tidy</code> / <code>.of_tidy</code> conversions in proofs outside Machines</div></div>
+  </div>
+
+  <h2>The graph</h2>
+  <div class="legend">
+    <span style="--c:var(--machine)">machine model</span>
+    <span style="--c:var(--plain)">plain predicate</span>
+    <span style="--c:var(--tidy)">tidy predicate (legacy)</span>
+    <span style="--c:var(--cert)">certificate / program</span>
+    <span style="--c:var(--tactic)">tactic</span>
+    <span style="--c:var(--class)">complexity class</span>
+  </div>
+  <div class="controls" id="views">
+    <button data-view="all" class="on">Everything</button>
+    <button data-view="recommended">Recommended routes</button>
+    <button data-view="plain">Plain calculus only</button>
+    <button data-view="tidy">Plain ↔ tidy bridges</button>
+    <button data-view="machines">Machines → predicates</button>
+  </div>
+  <div class="wrap">
+    <div id="cy" role="img" aria-label="Graph of machine models, complexity predicates, tactics and bridge lemmas"></div>
+    <aside id="info">
+      <div class="kind">How to read it</div>
+      <h3>Click a node or an edge</h3>
+      <p>Arrows point from what you have to what you get: <em>A → B</em> means a certificate of A yields one of B.
+      Edge labels name the bridge lemma; thicker edges are used more often. Thick green edges are the routes the
+      library recommends.</p>
+      <p>The polynomial-time hub <code>ComputableInPolyTime</code> sits in the middle: almost every other route ends there,
+      and it feeds the probabilistic (<code>IsPPTOn</code>) and class-level results.</p>
+    </aside>
+  </div>
+
+  <h2>Recommended route per kind of claim</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Claim</th><th>State it as</th><th>Prove it with</th></tr>
+    <tr><td>Polynomial-time function</td><td><code>ComputableInPolyTime</code> <span class="pill plain">plain</span></td><td><code>fun_prop</code> / <code>polytime</code> over plain closure rules; reuse named <code>@[program_certificate]</code> lemmas. Drop to tidy only inside proofs, and to kernel combinators only inside <code>Machines</code>.</td></tr>
+    <tr><td>Explicit or fine-grained bounds</td><td><code>ComputableInO T S</code> <span class="pill plain">plain</span></td><td>Plain closure rules (<code>comp</code>, <code>foldl</code>, <code>iterate</code>) or a <code>NativeCertificate</code> with composable resource arithmetic; GenericRAM / WordRAM programs reach it by transport.</td></tr>
+    <tr><td>Logarithmic space</td><td><code>ComputableInLogSpace</code> <span class="pill plain">plain</span></td><td>Finite-state <code>Transducer</code>, <code>CounterProgram</code> or <code>QueryMachine</code> rather than raw machines; compose with <code>.comp</code>; bridges to polynomial time. No <code>fun_prop</code> yet (#1449).</td></tr>
+    <tr><td>Nondeterministic logspace (NL)</td><td><code>DecidesInSpace</code> on <code>MultiTapeNTM</code></td><td>Nondeterministic counter programs / query machines compiled by <code>exists_decidesInSpace</code>.</td></tr>
+    <tr><td>Polynomial space</td><td><code>ComputableInPolySpace</code> <span class="pill plain">plain</span></td><td>Closure rules (<code>of_polyTime</code>, <code>comp</code>, <code>ite</code>, <code>iterate</code>), then <code>mem_PSPACE_of_computableInPolySpace</code>.</td></tr>
+    <tr><td>Probabilistic polynomial time</td><td><code>IsPPTOn</code> / <code>IsOraclePPTOn</code></td><td><code>ppt</code> tactic, fed by <code>ComputableInPolyTime.isPPTOn</code>; oracle steps still by hand (<code>IsOraclePPTOn.ite / map / pair</code>).</td></tr>
+    <tr><td>RAM algorithms</td><td>WordRAM <code>Refines</code> / <code>UniformComputableInPolyTime</code></td><td><code>stateful</code> tactic, then <code>WordRAM.transport_polyTime</code> to reach the Turing-machine predicates.</td></tr>
+    <tr><td>Non-uniform circuits</td><td>size / depth, <code>SIZE</code>, <code>NC</code>, <code>AC</code>, <code>PPolyOn</code></td><td>Separate calculus; <code>P_subset_PPolyOn</code> connects polynomial time to circuits.</td></tr>
+  </table></div>
+
+  <h2>Predicates</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Predicate</th><th>Kind</th><th>Mentions / files</th><th><code>fun_prop</code> rules</th><th>Notes</th></tr>
+    <tr><td><code>ComputableInTimeAndSpace</code></td><td class="plain">plain</td><td>159 / 43</td><td>0</td><td>Base notion (cslib): one machine within explicit time and space.</td></tr>
+    <tr><td><code>ComputableTidilyInTimeAndSpace</code></td><td class="tidy">tidy</td><td>264 / 37</td><td>~4</td><td>Machine leaves tapes clean; needed by the composition kernel.</td></tr>
+    <tr><td><code>ComputableInPolyTime</code></td><td class="plain">plain</td><td>6948 / 494</td><td>~946</td><td>Canonical public target.</td></tr>
+    <tr><td><code>ComputableTidilyInPolyTime</code></td><td class="tidy">tidy</td><td>5839 / 405</td><td>~483</td><td>Legacy; most remaining tidy rules.</td></tr>
+    <tr><td><code>ComputableInO T S</code></td><td class="plain">plain</td><td>597 / 93</td><td>~5</td><td>Output length charged to space.</td></tr>
+    <tr><td><code>ComputableTidilyInO</code></td><td class="tidy">tidy</td><td>490 / 78</td><td>~6</td><td></td></tr>
+    <tr><td><code>ComputableInBigO</code></td><td class="plain">plain</td><td>25 / 12</td><td>0</td><td>Output not charged.</td></tr>
+    <tr><td><code>ComputableInDegree d e</code></td><td class="plain">plain</td><td>149 / 27</td><td>~4</td><td>Polynomial degree bounds.</td></tr>
+    <tr><td><code>ComputableTidilyInDegree</code></td><td class="tidy">tidy</td><td>422 / 48</td><td>~52</td><td></td></tr>
+    <tr><td><code>ComputableInLinearTimeAndSpace</code></td><td class="plain">plain</td><td>82 / 16</td><td>~6</td><td></td></tr>
+    <tr><td><code>ComputableInSpace S</code></td><td class="plain">plain</td><td>79 / 12</td><td>0</td><td></td></tr>
+    <tr><td><code>ComputableTidilyInSpace S</code></td><td class="tidy">tidy</td><td>758 / 29</td><td>0</td><td>Heavily used by logspace routines; no full plain calculus yet.</td></tr>
+    <tr><td><code>ComputableInPolySpace</code></td><td class="plain">plain</td><td>111 / 26</td><td>~8</td><td></td></tr>
+    <tr><td><code>ComputableInLogSpace</code></td><td class="plain">plain</td><td>240 / 22</td><td>0</td><td>Output not charged (transducer convention); plain-only, no tidy twin.</td></tr>
+    <tr><td><code>IsPPTOn</code></td><td class="plain">plain</td><td>959 / 132</td><td>~85</td><td>Fair-coin machine realizes a probabilistic program in polynomial time.</td></tr>
+    <tr><td><code>IsOraclePPTOn</code></td><td class="plain">plain</td><td>359 / 50</td><td>~14</td><td>With an external oracle.</td></tr>
+    <tr><td><code>NativeCertificate</code></td><td>certificate</td><td>1181 / 27</td><td>~4</td><td>Packaged <code>ComputableInO</code> with resource arithmetic (GenericRAM).</td></tr>
+  </table></div>
+
+  <h2>Machine models</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Model</th><th>Size</th><th>What is proven about it</th></tr>
+    <tr><td>Multi-tape TM (deterministic)</td><td>~71k lines</td><td>The hub: every function predicate above. Kernel combinators: composition, if, iterate-while, multi-pass, stream fold, transducers.</td></tr>
+    <tr><td>Nondeterministic TM</td><td>544 mentions</td><td><code>DecidesInTime</code>, <code>DecidesInSpace</code>: NP, NTIME, NL, NSPACE.</td></tr>
+    <tr><td>Probabilistic TM (fair coins)</td><td>6.8k lines</td><td><code>IsPPTOn</code>, <code>IsOraclePPTOn</code>: BPP, RP, ZPP, PP, RL, BPL.</td></tr>
+    <tr><td>Alternating TM</td><td>1.1k lines</td><td><code>DecidesInTime</code>: AP.</td></tr>
+    <tr><td>Counting TM</td><td>3.7k lines</td><td>#P, GapP.</td></tr>
+    <tr><td>Query machine / counter program</td><td>~4.5k lines</td><td>Compiled to <code>ComputableInLogSpace</code> (deterministic) or <code>DecidesInSpace</code> (nondeterministic).</td></tr>
+    <tr><td>Finite-state transducer</td><td>small</td><td>Directly linear time, logspace, polynomial time.</td></tr>
+    <tr><td>GenericRAM (native certificates)</td><td>9.0k lines</td><td>Simulated by TMs: <code>transport_inO</code>, <code>transport_polyTime</code>.</td></tr>
+    <tr><td>WordRAM</td><td>14k + 21k lines</td><td>RAM-time predicates and <code>Refines</code>; transported to TM predicates.</td></tr>
+    <tr><td>Single-tape TM, Mathlib TM2</td><td>small</td><td>Bridged to multi-tape <code>ComputableInTimeAndSpace</code>.</td></tr>
+    <tr><td>Cook–Reckhow RAM</td><td>1.2k lines</td><td><code>ComputesInTime</code> with unit and logarithmic cost; not bridged to TMs.</td></tr>
+    <tr><td>Circuits (Boolean, rational, arithmetic)</td><td>~115k lines</td><td>Size and depth; non-uniform classes; evaluators proven polynomial-time.</td></tr>
+  </table></div>
+
+  <h2>The tidy → plain migration</h2>
+  <p>Historically, closure rules were proved for <em>tidy</em> machines (which leave their tapes clean), and plain
+  results were obtained by converting back and forth. Issue #862 deletes the tidy calculus, keeping tidiness only as a
+  machine-level kernel. Statements are already mostly plain (91 public tidy statements remain outside the machine
+  layer); proofs still convert through <code>.tidy</code> / <code>.of_tidy</code> several thousand times. Each slice
+  moves clients to plain proofs, adds missing plain rules (#608) and deletes tidy declarations once unused.</p>
+</main>
+<footer>Generated from the repository by an agent for crei (Claude Code). Counts are from <code>git grep</code> and
+are approximate; the edge usage counts are heuristic. Source of this page:
+<a href="https://github.com/chris-ai1/complexity-proof-map">chris-ai1/complexity-proof-map</a>.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+<script>
+const N = [
+ // machines
+ ["TM","Multi-tape TM","machine","The deterministic multi-tape Turing machine (cslib). The hub model: ~3500 mentions, ~71k lines of local machine library (combinators, kernels, encodings, universal machine)."],
+ ["NTM","Nondeterministic TM","machine","MultiTapeNTM: DecidesInTime / DecidesInSpace; classes NP, NTIME, NL, NSPACE."],
+ ["PTM","Probabilistic TM","machine","MultiTapePTM: fair-coin machine with read-once coins; realizes IsPPTOn programs; classes BPP, RP, ZPP, PP, RL, BPL."],
+ ["ATM","Alternating TM","machine","MultiTapeATM: DecidesInTime; class AP."],
+ ["CTM","Counting TM","machine","MultiTapeCTM: #P and GapP."],
+ ["Transducer","Transducer","machine","Finite-state transducer: linear time, logspace and polynomial time directly."],
+ ["CounterProgram","Counter program","machine","Logspace programs with polynomially bounded counters; compiled through query machines to logspace TMs. Deterministic and nondeterministic variants."],
+ ["QueryMachine","Query machine","machine","Read-only input queries plus a small state; QueryMachine.computableInLogSpace compiles it to a logspace TM."],
+ ["GenericRAM","GenericRAM program","machine","RAM programs simulated by TMs (GenericRAM/Simulation): stepCertificate, runCertificate."],
+ ["WordRAM","WordRAM program","machine","Word-RAM with RAM-time predicates and controller refinement (Refines); transported to TMs via GenericRAM."],
+ ["SingleTape","Single-tape TM / TM2","machine","Single-tape TMs and Mathlib's TM2, bridged to multi-tape ComputableInTimeAndSpace."],
+ ["Circuit","Circuits","machine","Boolean, rational and arithmetic circuits: size, depth, SIZE, NC, AC, P/poly (~115k lines)."],
+ // predicates plain
+ ["CTS","ComputableInTimeAndSpace","plain","Base plain notion: one machine within explicit time and space (cslib). 159 mentions."],
+ ["PT","ComputableInPolyTime","plain","Canonical public target. ~6950 mentions, ~946 fun_prop rules. Proved with fun_prop / polytime."],
+ ["O","ComputableInO","plain","Explicit asymptotic time and space; output charged to space. 597 mentions."],
+ ["Deg","ComputableInDegree","plain","Polynomial degree bounds. 149 mentions."],
+ ["Lin","ComputableInLinearTimeAndSpace","plain","Linear time and space. 82 mentions."],
+ ["Space","ComputableInSpace","plain","Space bound in some time. 79 mentions."],
+ ["PSpace","ComputableInPolySpace","plain","Polynomial space. 111 mentions; closure rules and iterate."],
+ ["LS","ComputableInLogSpace","plain","Logarithmic space, output not charged. 240 mentions; plain-only; closed under composition (via the universal machine). No fun_prop yet (#1449)."],
+ ["PPT","IsPPTOn","plain","A fair-coin machine realizes a probabilistic program in polynomial time. 959 mentions, ~85 fun_prop rules; ppt tactic."],
+ ["OPPT","IsOraclePPTOn","plain","Probabilistic polynomial time with an external oracle. 359 mentions."],
+ ["NDS","DecidesInSpace / DecidesInTime","plain","Decision predicates for nondeterministic (and alternating) machines."],
+ // tidy
+ ["TCTS","ComputableTidilyInTimeAndSpace","tidy","Machine-level tidy notion (tapes cleaned, heads rewound). Remains as the kernel."],
+ ["TPT","ComputableTidilyInPolyTime","tidy","Legacy tidy polynomial time: 5839 mentions, ~483 fun_prop rules. Being deleted (#862)."],
+ ["TO","ComputableTidilyInO","tidy","Legacy tidy O-bounds: 490 mentions."],
+ ["TDeg","ComputableTidilyInDegree","tidy","Legacy tidy degree bounds: 422 mentions, ~52 fun_prop rules."],
+ ["TSpace","ComputableTidilyInSpace","tidy","Tidy space bounds, used by logspace routines and InSpaceLib (758 mentions)."],
+ // certificates / tactics
+ ["Native","NativeCertificate","cert","Packaged ComputableInO with composable resource arithmetic (comp, prod, iterate). 1181 mentions."],
+ ["Kernel","Kernel combinators","cert","Machine constructions: composition, if-then-else, iterate-while, multi-pass, stream fold, normal forms (tidy kernel)."],
+ ["fun_prop","fun_prop","tactic","Mathlib's function-property automation over closure rules. ~2350 calls."],
+ ["polytime","polytime","tactic","Tactic/PolyTime.lean: named certificates first (@[program_certificate]), fun_prop for composition, Aesop for loops. ~234 uses."],
+ ["ppt","ppt","tactic","Tactic/PPT.lean: PPT rules plus polytime for deterministic parts. ~92 uses."],
+ ["stateful","stateful","tactic","Hoare-style and WordRAM Refines contracts. ~10 uses."],
+ // classes
+ ["Classes","Complexity classes","class","P, NP, PSPACE, L, NL, BPP, #P, AP, ... via membership lemmas."],
+];
+// edges: [from,to,lemma,usage, recommended?]
+const E = [
+ ["TM","CTS","ComputesFunInTimeAndSpace (definition)",50,true],
+ ["Kernel","TCTS","machine combinators (comp, ite, iterateWhile, multiPass, StreamFold)",80,false],
+ ["CTS","TCTS","computableTidilyInTimeAndSpace (tidy normal form)",40,false],
+ ["TCTS","CTS","ComputableTidilyInTimeAndSpace.computableInTimeAndSpace",40,false],
+ ["CTS","PT","ComputableInTimeAndSpace.computableInPolyTime",30,true],
+ ["CTS","O","of_bounds",20,true],
+ ["PT","TPT","ComputableInPolyTime.tidy",258,false],
+ ["TPT","PT","ComputableInPolyTime.of_tidy",200,false],
+ ["O","TO","ComputableInO.tidy",60,false],
+ ["TO","O","ComputableInO.of_tidy",60,false],
+ ["Deg","PT","ComputableInDegree.computableInPolyTime",20,true],
+ ["TDeg","TPT","computableTidilyInPolyTime",40,false],
+ ["O","PT","ComputableInO.computableInPolyTime (polynomial T, S)",5,true],
+ ["PT","O","Internal.NormalForm.inO",22,false],
+ ["Lin","O","of_linear",15,true],
+ ["Deg","O","ComputableInDegree.inO",10,true],
+ ["TO","TSpace","ComputableTidilyInSpace.of_inO",30,false],
+ ["Space","TSpace","ComputableInSpace.tidy",10,false],
+ ["TSpace","LS","QueryMachine.computableInLogSpace",10,false],
+ ["LS","PT","ComputableInLogSpace.computableInPolyTime",10,true],
+ ["PT","PSpace","ComputableInPolySpace.of_polyTime",10,true],
+ ["Transducer","LS","Transducer.computableInLogSpace",20,true],
+ ["Transducer","Lin","of_transducer",15,true],
+ ["Transducer","PT","ofTransducer",5,false],
+ ["CounterProgram","QueryMachine","toQueryMachine",10,true],
+ ["QueryMachine","LS","QueryMachine.computableInLogSpace",10,true],
+ ["CounterProgram","NDS","exists_decidesInLogSpace (nondeterministic)",8,true],
+ ["NTM","NDS","DecidesInTime / DecidesInSpace (definition)",30,true],
+ ["ATM","NDS","DecidesInTime (definition)",5,true],
+ ["PTM","PPT","realizes the program (definition)",30,true],
+ ["PT","PPT","ComputableInPolyTime.isPPTOn",167,true],
+ ["TPT","PPT","ComputableTidilyInPolyTime.isPPTOn",31,false],
+ ["TPT","OPPT","ComputableTidilyInPolyTime.isOraclePPTOn",20,false],
+ ["PPT","OPPT","IsPPTOn.isOraclePPTOn",15,true],
+ ["OPPT","PPT","IsOraclePPTOn.isPPTOn",15,false],
+ ["GenericRAM","Native","stepCertificate / runCertificate",15,true],
+ ["Native","O","computes (field)",15,true],
+ ["Native","PT","NativeCertificate.polyTime",10,true],
+ ["WordRAM","GenericRAM","Program.toGeneric",10,true],
+ ["WordRAM","PT","WordRAM.transport_polyTime",8,true],
+ ["SingleTape","CTS","TimeComputable.computableInTimeAndSpace",3,false],
+ ["PT","Circuit","P_subset_PPolyOn",5,false],
+ ["PT","Classes","membership lemmas (P, NP verifiers, ...)",120,true],
+ ["PSpace","Classes","mem_PSPACE_of_computableInPolySpace",10,true],
+ ["LS","Classes","L membership",20,true],
+ ["NDS","Classes","NP / NL / AP membership",30,true],
+ ["PPT","Classes","BPP / RP / ZPP / IP",60,true],
+ ["CTM","Classes","#P / GapP",15,true],
+ ["fun_prop","PT","closure rules (~946)",200,true],
+ ["fun_prop","TPT","tidy closure rules (~483)",120,false],
+ ["polytime","PT","named certificates + loops",80,true],
+ ["ppt","PPT","PPT rules",60,true],
+ ["stateful","WordRAM","Refines contracts",10,true],
+];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const colorOf = k => ({machine:css('--machine'),plain:css('--plain'),tidy:css('--tidy'),cert:css('--cert'),tactic:css('--tactic'),class:css('--class')}[k]);
+const els = [];
+for (const [id,label,kind,desc] of N) els.push({data:{id,label,kind,desc}});
+E.forEach(([s,t,l,u,r],i)=>els.push({data:{id:'e'+i,source:s,target:t,label:l,usage:u,rec:r?1:0}}));
+cytoscape.use(cytoscapeDagre);
+const cy = cytoscape({
+  container: document.getElementById('cy'), elements: els, wheelSensitivity: 0.25,
+  style: [
+    {selector:'node',style:{'label':'data(label)','font-size':11,'text-wrap':'wrap','text-max-width':110,
+      'background-color':e=>colorOf(e.data('kind')),'color':css('--ink'),'text-valign':'bottom','text-margin-y':4,
+      'width':18,'height':18,'shape':e=>({machine:'round-rectangle',tactic:'diamond',class:'hexagon',cert:'round-tag'}[e.data('kind')]||'ellipse')}},
+    {selector:'node[id = "PT"]',style:{'width':30,'height':30,'font-weight':'bold'}},
+    {selector:'edge',style:{'curve-style':'bezier','target-arrow-shape':'triangle','arrow-scale':0.8,
+      'width':e=>Math.max(1,Math.min(7,Math.log2(1+e.data('usage')))),
+      'line-color':e=>e.data('rec')?css('--plain'):css('--line'),'target-arrow-color':e=>e.data('rec')?css('--plain'):css('--muted'),
+      'opacity':0.85}},
+    {selector:'edge[source = "TPT"], edge[target = "TPT"], edge[source = "TO"], edge[target = "TO"], edge[source = "TDeg"], edge[source = "TSpace"], edge[target = "TSpace"], edge[target = "TCTS"], edge[source = "TCTS"]',style:{'line-style':'dashed','line-color':css('--tidy'),'target-arrow-color':css('--tidy')}},
+    {selector:'.faded',style:{'opacity':0.08}},
+    {selector:':selected',style:{'border-width':3,'border-color':css('--accent')}},
+    {selector:'edge.show',style:{'label':'data(label)','font-size':9,'text-rotation':'autorotate','color':css('--muted'),'text-background-color':css('--panel'),'text-background-opacity':0.8}}
+  ],
+  layout:{name:'dagre',rankDir:'LR',nodeSep:22,rankSep:85,edgeSep:6}
+});
+const info = document.getElementById('info');
+const esc = s => s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+cy.on('tap','node',ev=>{
+  const n=ev.target; cy.edges().removeClass('show'); n.connectedEdges().addClass('show');
+  const kindName={machine:'machine model',plain:'plain predicate',tidy:'tidy predicate (legacy)',cert:'certificate / construction',tactic:'tactic',class:'complexity classes'}[n.data('kind')];
+  const ins=n.incomers('edge').map(e=>`<li><code>${esc(e.source().data('label'))}</code> via <code>${esc(e.data('label'))}</code></li>`).join('');
+  const outs=n.outgoers('edge').map(e=>`<li><code>${esc(e.target().data('label'))}</code> via <code>${esc(e.data('label'))}</code></li>`).join('');
+  info.innerHTML=`<div class="kind">${kindName}</div><h3>${esc(n.data('label'))}</h3><p>${esc(n.data('desc'))}</p>`+
+    (ins?`<p><strong>Obtained from</strong></p><ul>${ins}</ul>`:'')+(outs?`<p><strong>Yields</strong></p><ul>${outs}</ul>`:'');
+});
+cy.on('tap','edge',ev=>{
+  const e=ev.target; cy.edges().removeClass('show'); e.addClass('show');
+  info.innerHTML=`<div class="kind">bridge</div><h3>${esc(e.source().data('label'))} → ${esc(e.target().data('label'))}</h3>
+  <p>Lemma: <code>${esc(e.data('label'))}</code></p><p>Approximate number of uses: ${e.data('usage')}</p>
+  <p>${e.data('rec')?'Part of a recommended route.':'Legacy or auxiliary route.'}</p>`;
+});
+const views={
+  all:()=>true,
+  recommended:e=>e.data('rec')===1,
+  plain:e=>['plain','machine','tactic','cert','class'].includes(e.source().data('kind'))&&['plain','machine','cert','class'].includes(e.target().data('kind')),
+  tidy:e=>e.source().data('kind')==='tidy'||e.target().data('kind')==='tidy',
+  machines:e=>e.source().data('kind')==='machine'||e.source().data('kind')==='cert'
+};
+document.getElementById('views').addEventListener('click',ev=>{
+  const b=ev.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#views button').forEach(x=>x.classList.toggle('on',x===b));
+  const f=views[b.dataset.view]; cy.elements().removeClass('faded');
+  if(b.dataset.view==='all')return;
+  const keep=cy.edges().filter(f); cy.edges().not(keep).addClass('faded');
+  cy.nodes().not(keep.connectedNodes()).addClass('faded');
+});
+</script>
+</body>
+</html>
