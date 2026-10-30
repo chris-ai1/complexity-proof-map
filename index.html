@@ -51,6 +51,8 @@ th{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
 .card .num{font-size:24px;font-weight:700}
 .card .lbl{color:var(--muted);font-size:13px}
+.updated{display:inline-block;margin:4px 0 0;font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--panel)}
+.ok{color:var(--plain)} .open{color:var(--tidy)}
 footer{color:var(--muted);font-size:13px;max-width:1200px;margin:0 auto;padding:0 16px 32px}
 a{color:var(--accent)}
 </style>
@@ -61,14 +63,16 @@ a{color:var(--accent)}
   <p class="lead">How the time and space complexity of functions is proven in
   <a href="https://github.com/cslib-community/complexitylib">cslib-community/complexitylib</a>:
   the machine models, the complexity predicates stated about them, the bridges between predicates, the tactics that
-  automate them, and which route the library recommends. Snapshot of <code>main</code> on 2026-10-28.</p>
+  automate them, and which route the library recommends. Snapshot of <code>main</code> at
+  <a href="https://github.com/cslib-community/complexitylib/commit/b6cfbcfc8"><code>b6cfbcfc8</code></a> plus the open pull requests named below.</p>
+  <p class="updated">Last updated 2026-10-30 · first published 2026-10-28</p>
 </header>
 <main>
   <div class="cards">
-    <div class="card"><div class="num">~6,950</div><div class="lbl">mentions of <code>ComputableInPolyTime</code> (plain), the canonical public target</div></div>
-    <div class="card"><div class="num">~946 / ~520</div><div class="lbl"><code>fun_prop</code> rules for plain / tidy predicates</div></div>
-    <div class="card"><div class="num">876</div><div class="lbl">public tidy statements left (785 inside Machines); being deleted in #862</div></div>
-    <div class="card"><div class="num">~2,500 / ~2,000</div><div class="lbl"><code>.tidy</code> / <code>.of_tidy</code> conversions in proofs outside Machines</div></div>
+    <div class="card"><div class="num">~10,600</div><div class="lbl">mentions of <code>ComputableInPolyTime</code> (plain), the canonical public target (was ~7,100)</div></div>
+    <div class="card"><div class="num">~1,140 / ~350</div><div class="lbl"><code>fun_prop</code> rules for plain / tidy predicates (was ~950 / ~515)</div></div>
+    <div class="card"><div class="num">704</div><div class="lbl">public tidy statements left (639 inside Machines; was 876 / 785), from <code>scripts/tidy_surface_baseline.json</code>; being deleted in #862</div></div>
+    <div class="card"><div class="num">~735 / ~490</div><div class="lbl"><code>.tidy</code> / <code>.of_tidy</code> conversions in proofs outside Machines (was ~2,700 / ~2,400)</div></div>
   </div>
 
   <h2>The graph</h2>
@@ -105,7 +109,9 @@ a{color:var(--accent)}
     <tr><th>Claim</th><th>State it as</th><th>Prove it with</th></tr>
     <tr><td>Polynomial-time function</td><td><code>ComputableInPolyTime</code> <span class="pill plain">plain</span></td><td><code>fun_prop</code> / <code>polytime</code> over plain closure rules; reuse named <code>@[program_certificate]</code> lemmas. Drop to tidy only inside proofs, and to kernel combinators only inside <code>Machines</code>.</td></tr>
     <tr><td>Explicit or fine-grained bounds</td><td><code>ComputableInO T S</code> <span class="pill plain">plain</span></td><td>Plain closure rules (<code>comp</code>, <code>foldl</code>, <code>iterate</code>) or a <code>NativeCertificate</code> with composable resource arithmetic; GenericRAM / WordRAM programs reach it by transport.</td></tr>
-    <tr><td>Logarithmic space</td><td><code>ComputableInLogSpace</code> <span class="pill plain">plain</span></td><td>Finite-state <code>Transducer</code>, <code>CounterProgram</code> or <code>QueryMachine</code> rather than raw machines; compose with <code>.comp</code>; bridges to polynomial time. No <code>fun_prop</code> yet (#1449).</td></tr>
+    <tr><td>Logarithmic space</td><td><code>ComputableInLogSpace</code> <span class="pill plain">plain</span></td><td>Finite-state <code>Transducer</code>, <code>CounterProgram</code> or <code>QueryMachine</code> rather than raw machines; compose with <code>.comp</code> or <code>fun_prop</code> (~19 logspace rules since <a href="https://github.com/cslib-community/complexitylib/pull/1471">#1471</a>); bridges to polynomial time.</td></tr>
+    <tr><td>Basic functions on binary ℕ</td><td>one primary <code>ComputableInTimeAndSpace</code> certificate with explicit bounds <span class="pill plain">plain</span></td><td>A streaming <code>Transducer</code> (one operand) or a <code>ZipTransducer</code> (two operands) gives linear time and zero or linear work space; the linear, degree, polynomial-time and space facades are derived from it. See <a href="#onecert">below</a>.</td></tr>
+    <tr><td>Randomized logspace (RL, BPL)</td><td><code>RL</code>, <code>BPL</code> on <code>MultiTapePTM</code></td><td>Logspace fair-coin machines with read-once coins and a derived polynomial clock; inclusions in <a href="#new">new results</a>.</td></tr>
     <tr><td>Nondeterministic logspace (NL)</td><td><code>DecidesInSpace</code> on <code>MultiTapeNTM</code></td><td>Nondeterministic counter programs / query machines compiled by <code>exists_decidesInSpace</code>.</td></tr>
     <tr><td>Polynomial space</td><td><code>ComputableInPolySpace</code> <span class="pill plain">plain</span></td><td>Closure rules (<code>of_polyTime</code>, <code>comp</code>, <code>ite</code>, <code>iterate</code>), then <code>mem_PSPACE_of_computableInPolySpace</code>.</td></tr>
     <tr><td>Probabilistic polynomial time</td><td><code>IsPPTOn</code> / <code>IsOraclePPTOn</code></td><td><code>ppt</code> tactic, fed by <code>ComputableInPolyTime.isPPTOn</code>; oracle steps still by hand (<code>IsOraclePPTOn.ite / map / pair</code>).</td></tr>
@@ -115,52 +121,103 @@ a{color:var(--accent)}
 
   <h2>Predicates</h2>
   <div class="tablewrap"><table>
-    <tr><th>Predicate</th><th>Kind</th><th>Mentions / files</th><th><code>fun_prop</code> rules</th><th>Notes</th></tr>
-    <tr><td><code>ComputableInTimeAndSpace</code></td><td class="plain">plain</td><td>159 / 43</td><td>0</td><td>Base notion (cslib): one machine within explicit time and space.</td></tr>
-    <tr><td><code>ComputableTidilyInTimeAndSpace</code></td><td class="tidy">tidy</td><td>264 / 37</td><td>~4</td><td>Machine leaves tapes clean; needed by the composition kernel.</td></tr>
-    <tr><td><code>ComputableInPolyTime</code></td><td class="plain">plain</td><td>6948 / 494</td><td>~946</td><td>Canonical public target.</td></tr>
-    <tr><td><code>ComputableTidilyInPolyTime</code></td><td class="tidy">tidy</td><td>5839 / 405</td><td>~483</td><td>Legacy; most remaining tidy rules.</td></tr>
-    <tr><td><code>ComputableInO T S</code></td><td class="plain">plain</td><td>597 / 93</td><td>~5</td><td>Output length charged to space.</td></tr>
-    <tr><td><code>ComputableTidilyInO</code></td><td class="tidy">tidy</td><td>490 / 78</td><td>~6</td><td></td></tr>
+    <tr><th>Predicate</th><th>Kind</th><th>Mentions / files in <code>Complexity/</code></th><th><code>fun_prop</code> rules</th><th>Notes</th></tr>
+    <tr><td><code>ComputableInTimeAndSpace</code></td><td class="plain">plain</td><td>158 / 45</td><td>0</td><td>Base notion (cslib): one machine within explicit time and space. Now the home of the primary certificates of binary ℕ primitives.</td></tr>
+    <tr><td><code>ComputableTidilyInTimeAndSpace</code></td><td class="tidy">tidy</td><td>260 / 34</td><td>~4</td><td>Machine leaves tapes clean; needed by the composition kernel.</td></tr>
+    <tr><td><code>ComputableInPolyTime</code></td><td class="plain">plain</td><td>10575 / 561</td><td>~1139</td><td>Canonical public target.</td></tr>
+    <tr><td><code>ComputableTidilyInPolyTime</code></td><td class="tidy">tidy</td><td>3096 / 130</td><td>~298</td><td>Legacy; most remaining tidy rules. Down from 5983 mentions.</td></tr>
+    <tr><td><code>ComputableInO T S</code></td><td class="plain">plain</td><td>887 / 114</td><td>~7</td><td>Output length charged to space.</td></tr>
+    <tr><td><code>ComputableTidilyInO</code></td><td class="tidy">tidy</td><td>231 / 33</td><td>0</td><td>Down from 503 mentions.</td></tr>
     <tr><td><code>ComputableInBigO</code></td><td class="plain">plain</td><td>25 / 12</td><td>0</td><td>Output not charged.</td></tr>
-    <tr><td><code>ComputableInDegree d e</code></td><td class="plain">plain</td><td>149 / 27</td><td>~4</td><td>Polynomial degree bounds.</td></tr>
-    <tr><td><code>ComputableTidilyInDegree</code></td><td class="tidy">tidy</td><td>422 / 48</td><td>~52</td><td></td></tr>
-    <tr><td><code>ComputableInLinearTimeAndSpace</code></td><td class="plain">plain</td><td>82 / 16</td><td>~6</td><td></td></tr>
-    <tr><td><code>ComputableInSpace S</code></td><td class="plain">plain</td><td>79 / 12</td><td>0</td><td></td></tr>
-    <tr><td><code>ComputableTidilyInSpace S</code></td><td class="tidy">tidy</td><td>758 / 29</td><td>0</td><td>Heavily used by logspace routines; no full plain calculus yet.</td></tr>
-    <tr><td><code>ComputableInPolySpace</code></td><td class="plain">plain</td><td>111 / 26</td><td>~8</td><td></td></tr>
-    <tr><td><code>ComputableInLogSpace</code></td><td class="plain">plain</td><td>240 / 22</td><td>0</td><td>Output not charged (transducer convention); plain-only, no tidy twin.</td></tr>
-    <tr><td><code>IsPPTOn</code></td><td class="plain">plain</td><td>959 / 132</td><td>~85</td><td>Fair-coin machine realizes a probabilistic program in polynomial time.</td></tr>
-    <tr><td><code>IsOraclePPTOn</code></td><td class="plain">plain</td><td>359 / 50</td><td>~14</td><td>With an external oracle.</td></tr>
-    <tr><td><code>NativeCertificate</code></td><td>certificate</td><td>1181 / 27</td><td>~4</td><td>Packaged <code>ComputableInO</code> with resource arithmetic (GenericRAM).</td></tr>
+    <tr><td><code>ComputableInDegree d e</code></td><td class="plain">plain</td><td>302 / 40</td><td>~19</td><td>Polynomial degree bounds; plain rules added in #1601.</td></tr>
+    <tr><td><code>ComputableTidilyInDegree</code></td><td class="tidy">tidy</td><td>356 / 32</td><td>~48</td><td></td></tr>
+    <tr><td><code>ComputableInLinearTimeAndSpace</code></td><td class="plain">plain</td><td>84 / 22</td><td>~6</td><td>Linear forms such as <code>natSucc</code>, <code>ZipTransducer.computableInLinearTimeAndSpace</code>.</td></tr>
+    <tr><td><code>ComputableInSpace S</code></td><td class="plain">plain</td><td>510 / 17</td><td>0</td><td>Plain space calculus added in #1592; non-Machines clients migrated.</td></tr>
+    <tr><td><code>ComputableTidilyInSpace S</code></td><td class="tidy">tidy</td><td>502 / 18</td><td>0</td><td>Now used only inside Machines (logspace routines, InSpaceLib).</td></tr>
+    <tr><td><code>ComputableInPolySpace</code></td><td class="plain">plain</td><td>134 / 17</td><td>~8</td><td></td></tr>
+    <tr><td><code>ComputableInLogSpace</code></td><td class="plain">plain</td><td>292 / 23</td><td>~19</td><td>Output not charged (transducer convention); plain-only, no tidy twin; <code>fun_prop</code> since #1471.</td></tr>
+    <tr><td><code>IsPPTOn</code></td><td class="plain">plain</td><td>1018 / 134</td><td>~85</td><td>Fair-coin machine realizes a probabilistic program in polynomial time.</td></tr>
+    <tr><td><code>IsOraclePPTOn</code></td><td class="plain">plain</td><td>439 / 52</td><td>~23</td><td>With an external oracle.</td></tr>
+    <tr><td><code>NativeCertificate</code></td><td>certificate</td><td>1288 / 27</td><td>~1</td><td>Packaged <code>ComputableInO</code> with resource arithmetic (GenericRAM).</td></tr>
   </table></div>
 
   <h2>Machine models</h2>
   <div class="tablewrap"><table>
-    <tr><th>Model</th><th>Size</th><th>What is proven about it</th></tr>
-    <tr><td>Multi-tape TM (deterministic)</td><td>~71k lines</td><td>The hub: every function predicate above. Kernel combinators: composition, if, iterate-while, multi-pass, stream fold, transducers.</td></tr>
+    <tr><th>Model</th><th>Size (lines of Lean)</th><th>What is proven about it</th></tr>
+    <tr><td>Multi-tape TM (deterministic)</td><td>~76k lines</td><td>The hub: every function predicate above. Kernel combinators: composition, if, iterate-while, multi-pass, stream fold, transducers.</td></tr>
     <tr><td>Nondeterministic TM</td><td>544 mentions</td><td><code>DecidesInTime</code>, <code>DecidesInSpace</code>: NP, NTIME, NL, NSPACE.</td></tr>
-    <tr><td>Probabilistic TM (fair coins)</td><td>6.8k lines</td><td><code>IsPPTOn</code>, <code>IsOraclePPTOn</code>: BPP, RP, ZPP, PP, RL, BPL.</td></tr>
-    <tr><td>Alternating TM</td><td>1.1k lines</td><td><code>DecidesInTime</code>: AP.</td></tr>
-    <tr><td>Counting TM</td><td>3.7k lines</td><td>#P, GapP.</td></tr>
-    <tr><td>Query machine / counter program</td><td>~4.5k lines</td><td>Compiled to <code>ComputableInLogSpace</code> (deterministic) or <code>DecidesInSpace</code> (nondeterministic).</td></tr>
-    <tr><td>Finite-state transducer</td><td>small</td><td>Directly linear time, logspace, polynomial time.</td></tr>
-    <tr><td>GenericRAM (native certificates)</td><td>9.0k lines</td><td>Simulated by TMs: <code>transport_inO</code>, <code>transport_polyTime</code>.</td></tr>
-    <tr><td>WordRAM</td><td>14k + 21k lines</td><td>RAM-time predicates and <code>Refines</code>; transported to TM predicates.</td></tr>
+    <tr><td>Probabilistic TM (fair coins)</td><td>7.7k lines</td><td><code>IsPPTOn</code>, <code>IsOraclePPTOn</code>: BPP, RP, ZPP, PP; logspace classes <code>RL</code>, <code>BPL</code> defined in #1457.</td></tr>
+    <tr><td>Alternating TM</td><td>0.7k lines</td><td><code>DecidesInTime</code>: AP.</td></tr>
+    <tr><td>Counting TM</td><td>3.5k lines</td><td>#P, GapP.</td></tr>
+    <tr><td>Query machine / counter program</td><td>~10k lines (LogSpace)</td><td>Compiled to <code>ComputableInLogSpace</code> (deterministic) or <code>DecidesInSpace</code> (nondeterministic).</td></tr>
+    <tr><td>Finite-state transducer</td><td>small</td><td>One input word, at most two output symbols per step. <code>Transducer.toTM</code> runs in linear time with no work tape: logspace, linear time, polynomial time. Primary certificate for binary successor (#1645), predecessor and zero test (#1659, open).</td></tr>
+    <tr><td>Zip transducer <em>(new)</em></td><td>~0.7k lines</td><td>Two binary words read in lockstep (#1649). <code>ZipTransducer.computableInTimeAndSpace</code>: time <code>3·|input|+1</code>, work space <code>|first operand|+2</code>. Primary certificate for <code>&lt;</code> (merged) and for addition, OR, equality and <code>≤</code> (#1660, open).</td></tr>
+    <tr><td>GenericRAM (native certificates)</td><td>9.2k lines</td><td>Simulated by TMs: <code>transport_inO</code>, <code>transport_polyTime</code>.</td></tr>
+    <tr><td>WordRAM</td><td>20k + 122k lines</td><td>RAM-time predicates and <code>Refines</code>; transported to TM predicates.</td></tr>
     <tr><td>Single-tape TM, Mathlib TM2</td><td>small</td><td>Bridged to multi-tape <code>ComputableInTimeAndSpace</code>.</td></tr>
     <tr><td>Cook–Reckhow RAM</td><td>1.2k lines</td><td><code>ComputesInTime</code> with unit and logarithmic cost; not bridged to TMs.</td></tr>
-    <tr><td>Circuits (Boolean, rational, arithmetic)</td><td>~115k lines</td><td>Size and depth; non-uniform classes; evaluators proven polynomial-time.</td></tr>
+    <tr><td>Circuits (Boolean, rational, arithmetic)</td><td>~121k lines</td><td>Size and depth; non-uniform classes; evaluators proven polynomial-time.</td></tr>
   </table></div>
+
+  <h2 id="onecert">One primary certificate per function (binary ℕ)</h2>
+  <p>A new pattern under <a href="https://github.com/cslib-community/complexitylib/issues/608">#608</a>: each basic function on binary naturals (<code>encNat</code>, least significant bit
+  first) gets <em>one</em> primary certificate, a plain <code>ComputableInTimeAndSpace</code> (or <code>ComputableInO</code>)
+  with explicit bounds, built from a finite-state machine. The linear-time, degree, polynomial-time, space and tidy facades
+  keep their statements but are derived from it. The quadratic folds they replace, and their helpers, are deleted.
+  Before, two-operand functions were only quadratic, because no combinator moved a work head in lockstep with the input.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Function</th><th>Machine</th><th>Primary bounds</th><th>Status</th></tr>
+    <tr><td><code>n + 1</code> (<code>computableInTimeAndSpace_succ</code>)</td><td>streaming <code>Transducer</code>, state = carry</td><td>time <code>2·|encNat n|+3</code>, work space 0</td><td><span class="ok">merged</span> <a href="https://github.com/cslib-community/complexitylib/pull/1645">#1645</a></td></tr>
+    <tr><td><code>n - 1</code>, <code>n = 0</code> (<code>…_pred</code>, <code>…_isZero</code>)</td><td>streaming <code>Transducer</code></td><td>time <code>2·|encNat n|+3</code>, work space 0</td><td><span class="open">open PR</span> <a href="https://github.com/cslib-community/complexitylib/pull/1659">#1659</a></td></tr>
+    <tr><td>zip kernel <code>ZipTransducer</code>, with <code>a &lt; b</code></td><td>two operands in lockstep</td><td>time <code>3·|input|+1</code>, work space <code>|encNat a|+2</code></td><td><span class="ok">merged</span> <a href="https://github.com/cslib-community/complexitylib/pull/1649">#1649</a></td></tr>
+    <tr><td><code>a + b</code>, <code>a ||| b</code>, <code>a = b</code>, <code>a ≤ b</code></td><td><code>ZipTransducer</code></td><td>time <code>3·|input|+1</code>, work space <code>|encNat a|+2</code></td><td><span class="open">open PR</span> <a href="https://github.com/cslib-community/complexitylib/pull/1660">#1660</a></td></tr>
+    <tr><td><code>a * b</code> (<code>ComputableInO.natMul</code>)</td><td>shift-and-add fold over <code>natAdd</code></td><td>time <code>(|input|+1)³</code> and output-charged space <code>|input|+1</code>, jointly</td><td><span class="open">open PR</span> <a href="https://github.com/cslib-community/complexitylib/pull/1655">#1655</a></td></tr>
+  </table></div>
+
+  <h2 id="new">Notable new results since 2026-10-28</h2>
+  <p><strong>Randomized logspace</strong> (<a href="https://github.com/cslib-community/complexitylib/issues/459">#459</a>, part of the classical track <a href="https://github.com/cslib-community/complexitylib/issues/474">#474</a>):</p>
+  <ul>
+    <li><span class="ok">merged</span>: <code>RL</code> and <code>BPL</code> for fair-coin <code>MultiTapePTM</code>; <code>L ⊆ RL</code>, <code>L ⊆ BPL</code>, <code>RL ⊆ NL</code> (<a href="https://github.com/cslib-community/complexitylib/pull/1457">#1457</a>, M1a).</li>
+    <li><span class="ok">merged</span>: a derived polynomial clock for halting logspace machines (<a href="https://github.com/cslib-community/complexitylib/pull/1525">#1525</a>, M1b).</li>
+    <li><span class="ok">merged</span>: one-sided amplification for <code>RL</code>, and <code>RL ⊆ BPL</code> (<a href="https://github.com/cslib-community/complexitylib/pull/1641">#1641</a>, M1c).</li>
+    <li><span class="ok">merged</span>: <code>fun_prop</code> automation for <code>ComputableInLogSpace</code> (<a href="https://github.com/cslib-community/complexitylib/pull/1471">#1471</a>); unary arithmetic by counter programs (<a href="https://github.com/cslib-community/complexitylib/pull/1474">#1474</a>).</li>
+    <li><span class="open">open PR</span>: configuration matrix of fair-coin machines (<a href="https://github.com/cslib-community/complexitylib/pull/1665">#1665</a>); <code>BPL ⊆ P</code> by exact evaluation of it (<a href="https://github.com/cslib-community/complexitylib/pull/1672">#1672</a>); <code>RL ⊆ RP</code>, <code>BPL ⊆ BPP</code>, <code>BPL ⊆ PSPACE</code> (<a href="https://github.com/cslib-community/complexitylib/pull/1666">#1666</a>); Savitch in space log² n, so <code>NL</code>, <code>RL ⊆ DSPACE(log² n)</code> (<a href="https://github.com/cslib-community/complexitylib/pull/1671">#1671</a>).</li>
+  </ul>
+  <p><strong>The <code>RL = L</code> programme</strong> (<a href="https://github.com/cslib-community/complexitylib/issues/1444">#1444</a>, milestone M7 of <a href="https://github.com/cslib-community/complexitylib/issues/474">#474</a>): prove <code>BPL ⊆ L</code>, hence
+  <code>L = RL = BPL</code>, natively. It follows the proof ideas of the OpenAI preprint <em>Exact Derandomization of Logarithmic
+  Space: L = RL = BPL</em> (2026-09-23). <strong>That preprint is unrefereed</strong>, so this route follows an unrefereed result.
+  The plan follows the simpler route of their Lean development, but it does not vendor or translate their code.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Phase</th><th>Content</th><th>Status</th></tr>
+    <tr><td>0</td><td>Classes <code>RL</code>, <code>BPL</code> and basic inclusions (= <a href="https://github.com/cslib-community/complexitylib/issues/459">#459</a> M1)</td><td><span class="ok">merged</span> (<a href="https://github.com/cslib-community/complexitylib/pull/1457">#1457</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1525">#1525</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1641">#1641</a>)</td></tr>
+    <tr><td>1</td><td>Configuration matrix; also gives <code>BPL ⊆ P</code>, <code>BPL ⊆ PSPACE</code></td><td><span class="open">open PR</span> (<a href="https://github.com/cslib-community/complexitylib/pull/1665">#1665</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1666">#1666</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1672">#1672</a>)</td></tr>
+    <tr><td>2</td><td>Correction-and-copy hierarchy: factorization, factorial truncation, detectors, stage bound (<a href="https://github.com/cslib-community/complexitylib/issues/1679">#1679</a>)</td><td><span class="ok">merged</span> (<a href="https://github.com/cslib-community/complexitylib/pull/1676">#1676</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1677">#1677</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1683">#1683</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1696">#1696</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1702">#1702</a>)</td></tr>
+    <tr><td>3</td><td>Sampling environment: retention channels, Fourier spectral gap, L⁴ contraction (<a href="https://github.com/cslib-community/complexitylib/issues/1682">#1682</a>)</td><td>partly <span class="ok">merged</span> (<a href="https://github.com/cslib-community/complexitylib/pull/1681">#1681</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1688">#1688</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1698">#1698</a>); expander and channel PRs <span class="open">open PR</span> (<a href="https://github.com/cslib-community/complexitylib/pull/1678">#1678</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1685">#1685</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1693">#1693</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1695">#1695</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1699">#1699</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1691">#1691</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1703">#1703</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1704">#1704</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1705">#1705</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1706">#1706</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1707">#1707</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1710">#1710</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1711">#1711</a>)</td></tr>
+    <tr><td>4</td><td>The estimator as mathematics (<a href="https://github.com/cslib-community/complexitylib/issues/1721">#1721</a>)</td><td><span class="open">open PR</span> (<a href="https://github.com/cslib-community/complexitylib/pull/1723">#1723</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1724">#1724</a>, <a href="https://github.com/cslib-community/complexitylib/pull/1725">#1725</a>)</td></tr>
+    <tr><td>5</td><td>Catalytic equality tests that restore borrowed registers</td><td><span class="open">open PR</span> (<a href="https://github.com/cslib-community/complexitylib/pull/1689">#1689</a>)</td></tr>
+    <tr><td>6</td><td>Space realization as a read machine; checkpoint <code>BPL ⊆ DSPACE(log² n)</code></td><td>not started</td></tr>
+    <tr><td>7</td><td>Decision: <code>BPL ⊆ L</code>, hence <code>L = RL = BPL</code></td><td>not started</td></tr>
+  </table></div>
+  <p><strong>Elsewhere:</strong> WordRAM algorithms grew from ~21k to ~122k lines (Schönhage-style matrix multiplication,
+  Chan–He 3SUM, Exact Triangle, Karger's minimum cut, binary and Fibonacci heaps, linear-probing dictionaries); integer polynomial hierarchies by native
+  padding (<a href="https://github.com/cslib-community/complexitylib/pull/1587">#1587</a>); Braverman's theorem that polylogarithmic independence fools AC⁰ (<a href="https://github.com/cslib-community/complexitylib/pull/1614">#1614</a>).</p>
 
   <h2>The tidy → plain migration</h2>
   <p>Historically, closure rules were proved for <em>tidy</em> machines (which leave their tapes clean), and plain
   results were obtained by converting back and forth. Issue #862 deletes the tidy calculus, keeping tidiness only as a
-  machine-level kernel. Statements are already mostly plain (91 public tidy statements remain outside the machine
-  layer); proofs still convert through <code>.tidy</code> / <code>.of_tidy</code> several thousand times. Each slice
-  moves clients to plain proofs, adds missing plain rules (#608) and deletes tidy declarations once unused.</p>
+  machine-level kernel. Since 2026-10-28 the tidy surface shrank from 876 to 704 public statements, and only 65 of
+  them remain outside the machine layer (was 91). Proofs outside Machines now convert through <code>.tidy</code> /
+  <code>.of_tidy</code> about 1,200 times, down from about 5,100. The complexity-class proofs, the PCP and crypto
+  clients, GenericRAM simulation, space and probabilistic modules were moved to plain proofs (#1541–#1550, #1591,
+  #1593, #1604, #1610, #1621, #1624, #1632), with new plain rules for degree bounds, space and oracle PPT (#1551,
+  #1558, #1560, #1592, #1601). Each slice moves clients to plain proofs, adds missing plain rules
+  (<a href="https://github.com/cslib-community/complexitylib/issues/608">#608</a>) and deletes tidy declarations once
+  unused (open: #1668, #1670, #1673).</p>
 </main>
-<footer>Generated from the repository by an agent for crei (Claude Code). Counts are from <code>git grep</code> and
-are approximate; the edge usage counts are heuristic. Source of this page:
+<footer>Generated from the repository by an agent for crei (Claude Code). Last updated 2026-10-30 against
+<code>main</code> at <code>b6cfbcfc8</code>; first published 2026-10-28. Counts are word occurrences from
+<code>git grep</code> in <code>Complexity/</code> and are approximate; <code>fun_prop</code> rules are attributed to the last
+predicate in the statement; the edge usage counts are heuristic. Source of this page:
 <a href="https://github.com/chris-ai1/complexity-proof-map">chris-ai1/complexity-proof-map</a>.</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
@@ -169,45 +226,47 @@ are approximate; the edge usage counts are heuristic. Source of this page:
 <script>
 const N = [
  // machines
- ["TM","Multi-tape TM","machine","The deterministic multi-tape Turing machine (cslib). The hub model: ~3500 mentions, ~71k lines of local machine library (combinators, kernels, encodings, universal machine)."],
+ ["TM","Multi-tape TM","machine","The deterministic multi-tape Turing machine (cslib). The hub model: ~76k lines of local machine library (combinators, kernels, encodings, universal machine)."],
  ["NTM","Nondeterministic TM","machine","MultiTapeNTM: DecidesInTime / DecidesInSpace; classes NP, NTIME, NL, NSPACE."],
- ["PTM","Probabilistic TM","machine","MultiTapePTM: fair-coin machine with read-once coins; realizes IsPPTOn programs; classes BPP, RP, ZPP, PP, RL, BPL."],
+ ["PTM","Probabilistic TM","machine","MultiTapePTM: fair-coin machine with read-once coins; realizes IsPPTOn programs; classes BPP, RP, ZPP, PP, and the logspace classes RL, BPL (#1457)."],
  ["ATM","Alternating TM","machine","MultiTapeATM: DecidesInTime; class AP."],
  ["CTM","Counting TM","machine","MultiTapeCTM: #P and GapP."],
- ["Transducer","Transducer","machine","Finite-state transducer: linear time, logspace and polynomial time directly."],
+ ["Transducer","Transducer","machine","Finite-state streaming transducer (one input word): Transducer.toTM runs in linear time with zero work space; hence logspace, linear time and polynomial time. Primary certificate of binary successor (#1645); predecessor and zero test in #1659 (open)."],
+ ["Zip","Zip transducer","machine","New (#1649): reads two binary words in lockstep; time 3·|input|+1, work space |first operand|+2. Primary certificate of < (merged) and of +, OR, =, ≤ (#1660, open)."],
  ["CounterProgram","Counter program","machine","Logspace programs with polynomially bounded counters; compiled through query machines to logspace TMs. Deterministic and nondeterministic variants."],
  ["QueryMachine","Query machine","machine","Read-only input queries plus a small state; QueryMachine.computableInLogSpace compiles it to a logspace TM."],
  ["GenericRAM","GenericRAM program","machine","RAM programs simulated by TMs (GenericRAM/Simulation): stepCertificate, runCertificate."],
- ["WordRAM","WordRAM program","machine","Word-RAM with RAM-time predicates and controller refinement (Refines); transported to TMs via GenericRAM."],
+ ["WordRAM","WordRAM program","machine","Word-RAM with RAM-time predicates and controller refinement (Refines); transported to TMs via GenericRAM. ~20k lines of model plus ~122k lines of algorithms."],
  ["SingleTape","Single-tape TM / TM2","machine","Single-tape TMs and Mathlib's TM2, bridged to multi-tape ComputableInTimeAndSpace."],
- ["Circuit","Circuits","machine","Boolean, rational and arithmetic circuits: size, depth, SIZE, NC, AC, P/poly (~115k lines)."],
+ ["Circuit","Circuits","machine","Boolean, rational and arithmetic circuits: size, depth, SIZE, NC, AC, P/poly (~121k lines)."],
  // predicates plain
- ["CTS","ComputableInTimeAndSpace","plain","Base plain notion: one machine within explicit time and space (cslib). 159 mentions."],
- ["PT","ComputableInPolyTime","plain","Canonical public target. ~6950 mentions, ~946 fun_prop rules. Proved with fun_prop / polytime."],
- ["O","ComputableInO","plain","Explicit asymptotic time and space; output charged to space. 597 mentions."],
- ["Deg","ComputableInDegree","plain","Polynomial degree bounds. 149 mentions."],
- ["Lin","ComputableInLinearTimeAndSpace","plain","Linear time and space. 82 mentions."],
- ["Space","ComputableInSpace","plain","Space bound in some time. 79 mentions."],
- ["PSpace","ComputableInPolySpace","plain","Polynomial space. 111 mentions; closure rules and iterate."],
- ["LS","ComputableInLogSpace","plain","Logarithmic space, output not charged. 240 mentions; plain-only; closed under composition (via the universal machine). No fun_prop yet (#1449)."],
- ["PPT","IsPPTOn","plain","A fair-coin machine realizes a probabilistic program in polynomial time. 959 mentions, ~85 fun_prop rules; ppt tactic."],
- ["OPPT","IsOraclePPTOn","plain","Probabilistic polynomial time with an external oracle. 359 mentions."],
+ ["CTS","ComputableInTimeAndSpace","plain","Base plain notion: one machine within explicit time and space (cslib). 158 mentions. Home of the one-primary-certificate pattern for binary ℕ functions (#608)."],
+ ["PT","ComputableInPolyTime","plain","Canonical public target. ~10,600 mentions, ~1,140 fun_prop rules. Proved with fun_prop / polytime."],
+ ["O","ComputableInO","plain","Explicit asymptotic time and space; output charged to space. 887 mentions. Primary certificate of binary multiplication in #1655 (open)."],
+ ["Deg","ComputableInDegree","plain","Polynomial degree bounds. 302 mentions; plain rules since #1601."],
+ ["Lin","ComputableInLinearTimeAndSpace","plain","Linear time and space. 84 mentions."],
+ ["Space","ComputableInSpace","plain","Space bound in some time. 510 mentions; plain space calculus since #1592."],
+ ["PSpace","ComputableInPolySpace","plain","Polynomial space. 134 mentions; closure rules and iterate."],
+ ["LS","ComputableInLogSpace","plain","Logarithmic space, output not charged. 292 mentions; plain-only; closed under composition (via the universal machine). ~19 fun_prop rules since #1471."],
+ ["PPT","IsPPTOn","plain","A fair-coin machine realizes a probabilistic program in polynomial time. 1018 mentions, ~85 fun_prop rules; ppt tactic."],
+ ["OPPT","IsOraclePPTOn","plain","Probabilistic polynomial time with an external oracle. 439 mentions; plain combinators since #1560."],
  ["NDS","DecidesInSpace / DecidesInTime","plain","Decision predicates for nondeterministic (and alternating) machines."],
  // tidy
  ["TCTS","ComputableTidilyInTimeAndSpace","tidy","Machine-level tidy notion (tapes cleaned, heads rewound). Remains as the kernel."],
- ["TPT","ComputableTidilyInPolyTime","tidy","Legacy tidy polynomial time: 5839 mentions, ~483 fun_prop rules. Being deleted (#862)."],
- ["TO","ComputableTidilyInO","tidy","Legacy tidy O-bounds: 490 mentions."],
- ["TDeg","ComputableTidilyInDegree","tidy","Legacy tidy degree bounds: 422 mentions, ~52 fun_prop rules."],
- ["TSpace","ComputableTidilyInSpace","tidy","Tidy space bounds, used by logspace routines and InSpaceLib (758 mentions)."],
+ ["TPT","ComputableTidilyInPolyTime","tidy","Legacy tidy polynomial time: 3096 mentions (was 5983), ~298 fun_prop rules. Being deleted (#862)."],
+ ["TO","ComputableTidilyInO","tidy","Legacy tidy O-bounds: 231 mentions (was 503)."],
+ ["TDeg","ComputableTidilyInDegree","tidy","Legacy tidy degree bounds: 356 mentions, ~48 fun_prop rules."],
+ ["TSpace","ComputableTidilyInSpace","tidy","Tidy space bounds, now only inside Machines: logspace routines and InSpaceLib (502 mentions, was 768)."],
  // certificates / tactics
- ["Native","NativeCertificate","cert","Packaged ComputableInO with composable resource arithmetic (comp, prod, iterate). 1181 mentions."],
+ ["Native","NativeCertificate","cert","Packaged ComputableInO with composable resource arithmetic (comp, prod, iterate). 1288 mentions."],
  ["Kernel","Kernel combinators","cert","Machine constructions: composition, if-then-else, iterate-while, multi-pass, stream fold, normal forms (tidy kernel)."],
- ["fun_prop","fun_prop","tactic","Mathlib's function-property automation over closure rules. ~2350 calls."],
- ["polytime","polytime","tactic","Tactic/PolyTime.lean: named certificates first (@[program_certificate]), fun_prop for composition, Aesop for loops. ~234 uses."],
- ["ppt","ppt","tactic","Tactic/PPT.lean: PPT rules plus polytime for deterministic parts. ~92 uses."],
- ["stateful","stateful","tactic","Hoare-style and WordRAM Refines contracts. ~10 uses."],
+ ["fun_prop","fun_prop","tactic","Mathlib's function-property automation over closure rules. ~3,170 call sites (broader recount on 2026-10-30)."],
+ ["polytime","polytime","tactic","Tactic/PolyTime.lean: named certificates first (@[program_certificate]), fun_prop for composition, Aesop for loops. ~270 uses."],
+ ["ppt","ppt","tactic","Tactic/PPT.lean: PPT rules plus polytime for deterministic parts. ~96 uses."],
+ ["stateful","stateful","tactic","Hoare-style and WordRAM Refines contracts."],
  // classes
  ["Classes","Complexity classes","class","P, NP, PSPACE, L, NL, BPP, #P, AP, ... via membership lemmas."],
+ ["RLBPL","RL / BPL","class","Randomized logspace (#459): L ⊆ RL ⊆ BPL and RL ⊆ NL merged (#1457, #1641), with one-sided amplification and a polynomial clock (#1525). Open: configuration matrix (#1665), BPL ⊆ P (#1672), BPL ⊆ BPP / PSPACE (#1666), RL ⊆ DSPACE(log²) (#1671). Programme RL = L (#1444) follows an unrefereed preprint."],
 ];
 // edges: [from,to,lemma,usage, recommended?]
 const E = [
@@ -217,10 +276,10 @@ const E = [
  ["TCTS","CTS","ComputableTidilyInTimeAndSpace.computableInTimeAndSpace",40,false],
  ["CTS","PT","ComputableInTimeAndSpace.computableInPolyTime",30,true],
  ["CTS","O","of_bounds",20,true],
- ["PT","TPT","ComputableInPolyTime.tidy",258,false],
- ["TPT","PT","ComputableInPolyTime.of_tidy",200,false],
- ["O","TO","ComputableInO.tidy",60,false],
- ["TO","O","ComputableInO.of_tidy",60,false],
+ ["PT","TPT","ComputableInPolyTime.tidy",70,false],
+ ["TPT","PT","ComputableInPolyTime.of_tidy",42,false],
+ ["O","TO","ComputableInO.tidy",16,false],
+ ["TO","O","ComputableInO.of_tidy",13,false],
  ["Deg","PT","ComputableInDegree.computableInPolyTime",20,true],
  ["TDeg","TPT","computableTidilyInPolyTime",40,false],
  ["O","PT","ComputableInO.computableInPolyTime (polynomial T, S)",5,true],
@@ -229,12 +288,18 @@ const E = [
  ["Deg","O","ComputableInDegree.inO",10,true],
  ["TO","TSpace","ComputableTidilyInSpace.of_inO",30,false],
  ["Space","TSpace","ComputableInSpace.tidy",10,false],
+ ["TSpace","Space","ComputableInSpace.of_tidy",10,false],
  ["TSpace","LS","QueryMachine.computableInLogSpace",10,false],
  ["LS","PT","ComputableInLogSpace.computableInPolyTime",10,true],
  ["PT","PSpace","ComputableInPolySpace.of_polyTime",10,true],
  ["Transducer","LS","Transducer.computableInLogSpace",20,true],
  ["Transducer","Lin","of_transducer",15,true],
  ["Transducer","PT","ofTransducer",5,false],
+ ["Transducer","CTS","Transducer.computesInTimeAndSpace_toTM (linear time, zero space; succ #1645, pred/isZero #1659)",10,true],
+ ["Zip","CTS","ZipTransducer.computableInTimeAndSpace (linear time, linear space; lt #1649, add/or/eq/le #1660)",10,true],
+ ["Zip","Lin","ZipTransducer.computableInLinearTimeAndSpace",5,true],
+ ["Zip","Deg","ZipTransducer.computableInDegree",5,true],
+ ["CTS","Lin","linear facade (natSucc, natPred, ...)",5,true],
  ["CounterProgram","QueryMachine","toQueryMachine",10,true],
  ["QueryMachine","LS","QueryMachine.computableInLogSpace",10,true],
  ["CounterProgram","NDS","exists_decidesInLogSpace (nondeterministic)",8,true],
@@ -242,7 +307,7 @@ const E = [
  ["ATM","NDS","DecidesInTime (definition)",5,true],
  ["PTM","PPT","realizes the program (definition)",30,true],
  ["PT","PPT","ComputableInPolyTime.isPPTOn",167,true],
- ["TPT","PPT","ComputableTidilyInPolyTime.isPPTOn",31,false],
+ ["TPT","PPT","ComputableTidilyInPolyTime.isPPTOn",10,false],
  ["TPT","OPPT","ComputableTidilyInPolyTime.isOraclePPTOn",20,false],
  ["PPT","OPPT","IsPPTOn.isOraclePPTOn",15,true],
  ["OPPT","PPT","IsOraclePPTOn.isPPTOn",15,false],
@@ -256,11 +321,15 @@ const E = [
  ["PT","Classes","membership lemmas (P, NP verifiers, ...)",120,true],
  ["PSpace","Classes","mem_PSPACE_of_computableInPolySpace",10,true],
  ["LS","Classes","L membership",20,true],
+ ["PTM","RLBPL","RL / BPL (definition, #1457)",10,true],
+ ["LS","RLBPL","L ⊆ RL ⊆ BPL (#1457, #1641)",5,true],
+ ["RLBPL","Classes","RL ⊆ NL (merged); BPL ⊆ P, PSPACE (open)",5,true],
  ["NDS","Classes","NP / NL / AP membership",30,true],
  ["PPT","Classes","BPP / RP / ZPP / IP",60,true],
  ["CTM","Classes","#P / GapP",15,true],
- ["fun_prop","PT","closure rules (~946)",200,true],
- ["fun_prop","TPT","tidy closure rules (~483)",120,false],
+ ["fun_prop","PT","closure rules (~1140)",220,true],
+ ["fun_prop","TPT","tidy closure rules (~298)",60,false],
+ ["fun_prop","LS","logspace closure rules (~19, #1471)",20,true],
  ["polytime","PT","named certificates + loops",80,true],
  ["ppt","PPT","PPT rules",60,true],
  ["stateful","WordRAM","Refines contracts",10,true],
